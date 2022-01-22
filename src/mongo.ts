@@ -9,11 +9,11 @@ export class MongoComponent {
         this.dbClient = new MongoClient(this.connectionStr);
     }
 
-    //#region UNUSED
-
     async connect() { await this.dbClient.connect(); }
 
     async disconnect() { await this.dbClient.close(); }
+
+    //#region UNUSED
 
     findAll() {
         this.dbClient.connect(err => {
@@ -63,33 +63,59 @@ export class MongoComponent {
 
         // update last_time
         collection = this.dbClient.db("Breakfasts").collection("meta");
-        res = await collection.updateOne({}, { $set: { last_update: new Date() } }, { upsert: true });
+        // res = await collection.updateOne({}, { $set: { last_update: new Date() } }, { upsert: true });
+        res = await collection.updateOne({}, { $set: { stam: new Date().getMinutes() } }, { upsert: true });
         console.log("update TIME", res);
 
-        // find * in all
-        collection = this.dbClient.db("Breakfasts").collection("all");
-        res = await collection.find({}).toArray();
-        console.log(res);
+        // // find * in all
+        // collection = this.dbClient.db("Breakfasts").collection("all");
+        // res = await collection.find({}).toArray();
+        // console.log(res);
 
-        // add to all
-        res = await collection.insertOne({ fromCode: true, temp: "ttrhefbd" });
-        console.log("after insert ALL", res);
+        // // add to all
+        // res = await collection.insertOne({ fromCode: true, temp: "ttrhefbd" });
+        // console.log("after insert ALL", res);
 
-        // add to last
+        // // add to last
+        // collection = this.dbClient.db("Breakfasts").collection("last");
+        // res = await collection.insertOne({ myID: 'code', fromCode: true, meta: "111223dd" });
+        // console.log("after insert LAST", res);
+
+        // update in last
         collection = this.dbClient.db("Breakfasts").collection("last");
-        res = await collection.insertOne({ myID: 'code', fromCode: true, meta: "111223dd" });
-        console.log("after insert LAST", res);
+        res = await collection.updateOne({ myID: 'code' }, { $set: { time: new Date() } }, { upsert: true });
+        console.log("after update LAST", res);
 
-        // create collection
-        collection = this.dbClient.db("Breakfasts").collection("newCollection");
-        res = await collection.insertOne({ ahlan: 23 });
-        console.log("new collection", res);
+        // // create collection
+        // collection = this.dbClient.db("Breakfasts").collection("newCollection");
+        // res = await collection.insertOne({ ahlan: 23 });
+        // console.log("new collection", res);
 
         await this.dbClient.close();
     }
 
     async transact() {
-        // 
+        await this.dbClient.connect();
+        const session = this.dbClient.startSession();
+
+        try {
+            await session.withTransaction(async () => {
+                const col1 = this.dbClient.db("Breakfasts").collection("newCollection");
+                const meta = this.dbClient.db("Breakfasts").collection("meta");
+
+                const res1 = await col1.updateMany({ vv: 4 }, { $set: { vv: new Date().getMilliseconds() } }, { session });
+                console.log(res1);
+                // throw "my error";
+                // await this.disconnect();
+                const res2 = await meta.updateOne({}, { $set: { last_update: new Date() } }, { session });
+                console.log(res2);
+            });
+        } catch (ex) {
+            console.log(ex);
+        } finally {
+            await session.endSession();
+            await this.disconnect();
+        }
     }
 
 }

@@ -8,18 +8,11 @@ export function hello(word: string = world): string {
 console.log(hello());
 
 const mc = new MongoComponent();
-mc.doAllActions();
-mc.transact();
-
-// try {
-//     // mc.connect();
-//     // mc.findAll();
-//     // mc.addToAll();
-//     // mc.addToLast();
-//     // mc.setLastUpdateTime();
-//     mc.doAllActions();
-// } catch (ex) {
-//     console.log(ex);
-// } finally {
-//     mc.disconnect();
-// }
+try {
+    // mc.doAllActions();
+    mc.transact();
+} catch (ex) {
+    console.log(ex);
+} finally {
+    mc.disconnect();
+}
